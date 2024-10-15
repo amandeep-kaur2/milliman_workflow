@@ -1,0 +1,63 @@
+---
+title: "amans_workflow"
+format: html
+editor: visual
+---
+
+## Packages
+
+```{r}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+```
+
+## Data Import
+
+```{r}
+claims <- read_csv("claims.csv")
+claims
+```
+
+## Data Cleaning
+
+```{r}
+claims_clean <- claims %>%
+  filter(STATUS1 %in% "BILLED") %>%
+  filter(HEALTHCARECLAIMTYPEID1 == "1") %>%
+  filter(HEALTHCARECLAIMTYPEID2 == "1") %>%
+  select(PATIENTID, DIAGNOSIS1, STATUS1, LASTBILLEDDATE1, OUTSTANDING1, OUTSTANDING2) %>%
+  mutate(total_outstanding = OUTSTANDING1 + OUTSTANDING2) %>%
+  arrange(desc(LASTBILLEDDATE1)) %>%
+  group_by(DIAGNOSIS1) %>%
+  summarise(
+    total_outstanding = sum(total_outstanding, na.rm = TRUE)
+  )
+ 
+
+```
+
+## Data Visualization
+
+
+```{r}
+dv1 <- ggplot(claims_clean, aes(x = reorder(DIAGNOSIS1, -total_outstanding), y = total_outstanding)) +
+  geom_bar(stat = "identity", fill = "pink") +
+  geom_text(aes(label = round(total_outstanding, 2)), vjust = -0.5, size = 3.5) +
+  labs(
+    x = "Diagnosis",
+    y = "Total Outstanding Amount",
+    title = "Total Outstanding Amount by Diagnosis"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplotly(dv1)
+```
+
+##Data Analysis
+
+```{r}
+
+```
